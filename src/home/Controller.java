@@ -95,7 +95,7 @@ public class Controller implements Initializable {
         btnSend.setVisible(false);
 
 //        openapp.setVisible(false);
-        String file_name = "/home/shehan/Desktop/txt/filepath.txt";
+        String file_name = "resources/filepath.txt";
         File f = new File(file_name);
         if(!f.exists()){
             try {
@@ -420,7 +420,7 @@ public class Controller implements Initializable {
         System.out.println(file.getAbsolutePath());
         appPath=file.getAbsolutePath();
 
-        try(BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter("/home/shehan/Desktop/txt/filepath.txt"))) {
+        try(BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter("resources/filepath.txt"))) {
             String fileContent = file.getAbsolutePath();
             bufferedWriter.write(fileContent);
         } catch (IOException e) {
@@ -483,6 +483,7 @@ public class Controller implements Initializable {
         int port = 0;
         try {
             serverSocket = new ServerSocket(0);
+            serveropen=true;
             port = serverSocket.getLocalPort();
 
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
@@ -499,6 +500,7 @@ public class Controller implements Initializable {
             if (result.get() == buttonTypeOne){
                 alert.close();
                 serverSocket.close();
+                serveropen=true;
 
             } else {
                 // ... user chose CANCEL or closed the dialog
@@ -509,7 +511,7 @@ public class Controller implements Initializable {
 
         Socket socket = null;
 
-        while(true){
+        while(serveropen){
             try {
                 socket = serverSocket.accept();
             } catch (IOException ex) {
