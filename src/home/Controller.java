@@ -497,10 +497,10 @@ public class Controller implements Initializable {
 
             Optional<ButtonType> result = alert.showAndWait();
             System.out.println(result.get());
-            if (result.get() == buttonTypeOne){
+            if (result.get() == buttonTypeCancel){
                 alert.close();
                 serverSocket.close();
-                serveropen=true;
+                serveropen=false;
 
             } else {
                 // ... user chose CANCEL or closed the dialog
@@ -512,6 +512,7 @@ public class Controller implements Initializable {
         Socket socket = null;
 
         while(serveropen){
+            System.out.println("server open");
             try {
                 socket = serverSocket.accept();
             } catch (IOException ex) {

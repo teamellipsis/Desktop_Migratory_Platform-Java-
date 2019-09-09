@@ -19,6 +19,8 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.stage.WindowEvent;
 
+import java.io.IOException;
+
 public class Main extends Application {
     private double x, y;
     @Override
@@ -41,6 +43,13 @@ public class Main extends Application {
             @Override
             public void handle(WindowEvent event) {
                 System.out.println("app is closed");
+                try {
+                    Controller.close_server();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
                 Controller controller=new Controller();
 //                try {
 //                    controller.close_app();
