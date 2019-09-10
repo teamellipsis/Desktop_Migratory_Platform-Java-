@@ -5,6 +5,7 @@ package home;
 import com.enigma.platform.ObjectInputStreamWithLoader;
 import com.enigma.platform.servr;
 import com.teamellipsis.dynamic.DynamicApp;
+import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
@@ -20,14 +21,18 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.Button;
+import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.TilePane;
 import javafx.scene.layout.VBox;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import javafx.stage.*;
+import javafx.util.Pair;
 
 import java.awt.*;
 import java.io.*;
@@ -36,6 +41,9 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Optional;
 import java.util.ResourceBundle;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 
 import static com.enigma.platform.ClassLoder.getclassloader;
 
@@ -45,7 +53,14 @@ public class Controller implements Initializable {
     private servr server;
     static  servr sserver;
     private String appPath;
+    private String appsDir;
+    private String sentDir;
+    private String todoPath;
+    PrintWriter output;
+    String messagefilelength;
+    String filename;
     private Desktop desktop = Desktop.getDesktop();
+    private int port;
     @FXML
     private VBox pnItems = null;
 
@@ -83,8 +98,14 @@ public class Controller implements Initializable {
 
     @FXML
     private Pane pnlMenus;
-
-
+    @FXML
+    private Label lblIP;
+    @FXML
+    private Label lblPort;
+    @FXML
+    private Label lblApplication;
+    @FXML
+    private Label lblStatus;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -100,7 +121,17 @@ public class Controller implements Initializable {
         if(!f.exists()){
             try {
                 f.createNewFile();
-                choosefile();
+                Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                alert.setTitle("Need Action");
+                alert.setHeaderText("Application path is not set");
+                alert.setContentText("Please select a directiory for application");
+                alert.showAndWait().ifPresent(rs -> {
+                    if (rs == ButtonType.OK) {
+                        System.out.println("Pressed OK.");
+                        choosefile();
+                    }
+                });
+
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -118,7 +149,19 @@ public class Controller implements Initializable {
             File appdir = new File(line);
             if(!appdir.exists()){
                 System.out.println("app folder is not exist");
-                choosefile();
+                Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                alert.setTitle("Need Action");
+                alert.setHeaderText("Application path is not set");
+                alert.setContentText("Please select a directiory for application");
+                alert.showAndWait().ifPresent(rs -> {
+                    if (rs == ButtonType.OK) {
+                        System.out.println("Pressed OK.");
+                        choosefile();
+                    }else{
+                        System.out.println("not sets aapp");
+                    }
+                });
+//                choosefile();
 //                try {
 //                    f.createNewFile();
 //                } catch (IOException e) {
@@ -126,6 +169,18 @@ public class Controller implements Initializable {
 //                }
             }else{
                 appPath=line;
+                appsDir=appPath+"/apps";
+                sentDir=appPath+"/sentapps";
+                File appsDirectory = new File(appPath+"/apps");
+                File sentApps = new File(appPath+"/sentapps");
+                if (! appsDirectory.exists()){
+                    appsDirectory.mkdir();
+                    appsDir=appPath+"/apps";
+                }
+                if (! sentApps.exists()){
+                    sentApps.mkdir();
+                    sentDir=appPath+"/sentapps";
+                }
                 getfiles();
             }
 //            System.out.println(line);
@@ -205,7 +260,7 @@ public class Controller implements Initializable {
         if(actionEvent.getSource()==btnGet)
         {
             try {
-                sendalert();
+                getapp();
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -214,8 +269,10 @@ public class Controller implements Initializable {
         if(actionEvent.getSource()==btnChangeDir)
         {
 
-            System.out.println("changegir");
+//            zipfile(new File("/home/shehan/Desktop/ziptest/todoapp"),new File("/home/shehan/Desktop/ziptest/test.zip"));
+//            System.out.println("changegir");
             choosefile();
+//            unzip(new File("/home/shehan/Desktop/ziptest/test.zip"),new File("/home/shehan/Desktop/ziptest/extract"));
 //
         }
     }
@@ -234,8 +291,8 @@ public class Controller implements Initializable {
         pnlOrders.toFront();
         getfiles();
     }
-    public void loadobject() throws IOException, ClassNotFoundException {
-        load_app();
+    public void loadobject(String path) throws IOException, ClassNotFoundException {
+        load_app(path);
 //        Alert alert = new Alert(Alert.AlertType.INFORMATION);
 //        alert.setTitle("Success...");
 //        alert.setHeaderText("Appllication is loaded successfully");
@@ -252,10 +309,10 @@ public class Controller implements Initializable {
 //        openapp.setVisible(true);
     }
 
-    public void showapp(){
+    public void showapp(String path){
         pnlOverview.setStyle("-fx-background-color : #02030A");
         pnlOverview.toFront();
-        open_app();
+        open_app(path);
         closeapp.setVisible(true);
         btnSave.setVisible(true);
         btnSend.setVisible(true);
@@ -263,12 +320,12 @@ public class Controller implements Initializable {
         btnGet.setVisible(false);
     }
 
-    public void loadwebpage(){
+    public void loadwebpage(String path){
         browser = new WebView();
         final WebEngine webEngine = browser.getEngine();
         webEngine.setJavaScriptEnabled(true);
         try {
-            File file = new File("resources/build/index.html");
+            File file = new File(path+"/build/index.html");
             URL url = file.toURI().toURL();
             // file:/C:/test/a.html
             System.out.println("Local URL: " + url.toString());
@@ -283,21 +340,21 @@ public class Controller implements Initializable {
 
 
     }
-    public void load_app() throws IOException, ClassNotFoundException {
-        InputStream fileIn1 = new FileInputStream("resources/todo.ser");
+    public void load_app(String path) throws IOException, ClassNotFoundException {
+        InputStream fileIn1 = new FileInputStream(path+"/app.ser");
 //        InputStream in = new ObjectInputStream(fileIn);
-        ObjectInputStreamWithLoader obl = new ObjectInputStreamWithLoader(fileIn1,getclassloader());
+        ObjectInputStreamWithLoader obl = new ObjectInputStreamWithLoader(fileIn1,getclassloader(path));
         dapp = (DynamicApp) obl.readObject();
         obl.close();
 //        String[] arr6 = {"0","test1","test_task","2001-2-21"};
 //        dapp.execute(arr6);
 //        dapp.execute(arr6);
     }
-    public void open_app(){
+    public void open_app(String path){
         server = new servr(dapp);
         sserver=server;
         server.start();
-        loadwebpage();
+        loadwebpage(path);
     }
     public void close_app() throws IOException, InterruptedException {
         if(server!=null){
@@ -309,12 +366,12 @@ public class Controller implements Initializable {
     public void save_app(){
         if(dapp!=null){
             try {
-                FileOutputStream fileOut = new FileOutputStream("resources/app.ser");
+                FileOutputStream fileOut = new FileOutputStream(todoPath+"/app.ser");
                 ObjectOutputStream out = new ObjectOutputStream(fileOut);
                 out.writeObject(dapp);
                 out.close();
                 fileOut.close();
-                System.out.printf("Serialized data is saved in /resources/app.ser");
+                System.out.printf("Serialized data is saved in "+todoPath+"/app.ser");
             } catch (IOException i) {
                 i.printStackTrace();
             }
@@ -331,15 +388,20 @@ public class Controller implements Initializable {
 
     public void getfiles(){
         ListView<String> list = new ListView<String>();
-        File dir = new File(appPath);
+        System.out.println(appsDir);
+        File dir = new File(appsDir);
+
         File[] fileNames = dir.listFiles();
 
         ObservableList<String> data = FXCollections.observableArrayList();
         HashMap<String, String> args= new HashMap<String, String>();
 
         for(File file : fileNames){
-            data.add(file.getName());
-            args.put(file.getName(),file.getAbsolutePath());
+            if(file.isDirectory()){
+                data.add(file.getName());
+                args.put(file.getName(),file.getAbsolutePath());
+            }
+
         }
         list.setItems(data);
 
@@ -352,25 +414,31 @@ public class Controller implements Initializable {
                                         String old_val, String new_val) {
 
                         System.out.println(args.get(new_val));
+                        String todopath = args.get(new_val);
+                        todoPath= args.get(new_val);
                         String selectedItm = detaildialog(new_val);
                         if(selectedItm.equals("Select Option")){
                             System.out.println("not selected");
                         }else if(selectedItm.equals("Open App")){
-                            System.out.println("open selected");
                             try {
-                                loadobject();
+                                loadobject(todopath);
                             } catch (IOException e) {
                                 e.printStackTrace();
                             } catch (ClassNotFoundException e) {
                                 e.printStackTrace();
                             }finally {
-                                showapp();
+                                showapp(todopath);
                             }
                         }else if(selectedItm.equals("Send App")){
+                            try {
+                                zipfile(new File(todopath),new File(sentDir+"/"+new_val+".zip"));
+                                sendfile(todopath);
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        }else if(selectedItm.equals("Reset")){
 
-                        }else if(selectedItm.equals("Save App")){
-
-                        }else if(selectedItm.equals("Close App")){
+                        }else if(selectedItm.equals("Delete")){
 
                         }
                         else{
@@ -390,6 +458,8 @@ public class Controller implements Initializable {
     }
 
     public void choosefile(){
+
+
         final DirectoryChooser fileChooser = new DirectoryChooser();
 //        final FileChooser fileChooser = new FileChooser();
         Stage stage = new Stage();
@@ -419,7 +489,16 @@ public class Controller implements Initializable {
     private void openFile(File file) {
         System.out.println(file.getAbsolutePath());
         appPath=file.getAbsolutePath();
-
+        File appsDirectory = new File(file+"/apps");
+        File sentApps = new File(file+"/sentapps");
+        if (! appsDirectory.exists()){
+            appsDirectory.mkdir();
+            appsDir=file+"/apps";
+        }
+        if (! sentApps.exists()){
+            sentApps.mkdir();
+            sentDir=file+"/sentapps";
+        }
         try(BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter("resources/filepath.txt"))) {
             String fileContent = file.getAbsolutePath();
             bufferedWriter.write(fileContent);
@@ -435,7 +514,7 @@ public class Controller implements Initializable {
         TilePane r = new TilePane();
         s.setTitle("creating choice dialog");
         Button b = new Button("click");
-        String days[] = { "Select Option","Open App","Send App","Save App","Close App" };
+        String days[] = { "Select Option","Open App","Send App","Reset","Delete"};
         Label l = new Label(days[1] + " selected");
         ChoiceDialog d = new ChoiceDialog(days[0], days);
         d.setHeaderText("Choose Action for :"+ filename);
@@ -465,8 +544,20 @@ public class Controller implements Initializable {
     return selecteditem;
     }
 
-    public void sendalert() throws Exception {
-
+    public void sendfile(String filename) throws Exception {
+        File sendtodo =  new File(filename);
+        String fileName = sendtodo.getName();;
+        int pos = fileName.lastIndexOf(".");
+        if (pos > 0 && pos < (fileName.length() - 1)) { // If '.' is not the first or last character.
+            fileName = fileName.substring(0, pos);
+        }
+        System.out.println(fileName);
+        String filesending = sentDir+"/"+fileName+".zip";
+        pnlMenus.setStyle("-fx-background-color : #464F67");
+        pnlMenus.toFront();
+        lblIP.setText(getipv4());
+        lblApplication.setText(fileName+".zip");
+        lblPort.setText("8000");
 //        try {
 //            String ip= InetAddress.getLocalHost().getHostAddress();
 //            System.out.println(ip);
@@ -474,93 +565,139 @@ public class Controller implements Initializable {
 //            e.printStackTrace();
 //        }
 
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
 
 
+                try {
+
+                ServerSocket serverSocket = null;
+                boolean serveropen=false;
+                int port = 0;
+                try {
+                    serverSocket = new ServerSocket(0);
+                    serveropen=true;
+                    port = serverSocket.getLocalPort();
+
+                    System.out.println(port);
+                    int finalPort = port;
+                    Platform.runLater(new Runnable() {
+                        @Override
+                        public void run() {
+                            lblPort.setText(Integer.toString(finalPort));
+                        }
+                    });
 
 
-        ServerSocket serverSocket = null;
-        boolean serveropen=false;
-        int port = 0;
-        try {
-            serverSocket = new ServerSocket(0);
-            serveropen=true;
-            port = serverSocket.getLocalPort();
+                } catch (IOException ex) {
+                    System.out.println("Can't setup server on this port number. ");
+                }
 
-            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-            alert.setTitle("Waiting for clients....");
-            alert.setHeaderText("ip : "+getipv4()+"\n  port : "+port);
-            alert.setContentText("waiting.. ");
-            ButtonType buttonTypeOne = new ButtonType("Wait", ButtonBar.ButtonData.OK_DONE);
-            ButtonType buttonTypeCancel = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
+                Socket socket = null;
 
-            alert.getButtonTypes().setAll(buttonTypeOne, buttonTypeCancel);
+                while(serveropen){
+                    System.out.println("server open");
+                    try {
+                        socket = serverSocket.accept();
+                        Platform.runLater(new Runnable() {
+                            @Override
+                            public void run() {
+                                lblStatus.setText("Client is Connected..");
+                            }
+                        });
+//
+                    } catch (IOException ex) {
+                        System.out.println("Can't accept client connection. ");
+                    }
+                    if(socket!=null){
+                        BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                        String message1 = input.readLine();
+                        System.out.println(message1);
+                        File file = new File(filesending);
+                        long length = file.length();
 
-            Optional<ButtonType> result = alert.showAndWait();
-            System.out.println(result.get());
-            if (result.get() == buttonTypeCancel){
-                alert.close();
-                serverSocket.close();
-                serveropen=false;
+                        if(message1.equals("get file")){
+                            Platform.runLater(new Runnable() {
+                                @Override
+                                public void run() {
+                                    lblStatus.setText("Sending file..");
+                                }
+                            });
+                            System.out.println("shehan");
+                            byte[] bytes = new byte[(int)length];
+                            InputStream fin = new FileInputStream(file);
+                            BufferedInputStream bis1 = new BufferedInputStream(fin);
+                            bis1.read(bytes, 0, bytes.length);
 
-            } else {
-                // ... user chose CANCEL or closed the dialog
-            }
-        } catch (IOException ex) {
-            System.out.println("Can't setup server on this port number. ");
-        }
+                            DataOutputStream dOut = new DataOutputStream(socket.getOutputStream());
+                            dOut.writeInt(bytes.length); // write length of the message
+                            dOut.write(bytes);
+                            Platform.runLater(new Runnable() {
+                                @Override
+                                public void run() {
+                                    lblStatus.setText("Done");
+                                }
+                            });
+//
 
-        Socket socket = null;
 
-        while(serveropen){
-            System.out.println("server open");
-            try {
-                socket = serverSocket.accept();
-            } catch (IOException ex) {
-                System.out.println("Can't accept client connection. ");
-            }
-            if(socket!=null){
-                BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                String message1 = input.readLine();
-                System.out.println(message1);
-                File file = new File("/home/shehan/Desktop/fyp/fileserver/src/main/java/WelcomeCourse.mp4");
-                long length = file.length();
+                            socket.close();
+                            serverSocket.close();
+                            System.out.println("server closed..........");
+                            break;
+                        }else{
+                            PrintWriter output= new PrintWriter(socket.getOutputStream());
+                            output.println(Integer.toString((int) file.length()));
+                            output.flush();
+                            System.out.println("Done.");
 
-                if(message1.equals("get file")){
-                    System.out.println("shehan");
-                    byte[] bytes = new byte[(int)length];
-                    InputStream fin = new FileInputStream(file);
-                    BufferedInputStream bis1 = new BufferedInputStream(fin);
-                    bis1.read(bytes, 0, bytes.length);
+                            BufferedReader input11 = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                            String message = input11.readLine();
+                            System.out.println(message);
 
-                    DataOutputStream dOut = new DataOutputStream(socket.getOutputStream());
-                    dOut.writeInt(bytes.length); // write length of the message
-                    dOut.write(bytes);
-                    System.out.println("Done.");
+                            String filename = file.getName();
+                            output.println(filename);
+                            output.flush();
+                            System.out.println("Done.");
 
-                    socket.close();
-                    serverSocket.close();
-                    break;
-                }else{
-                    PrintWriter output= new PrintWriter(socket.getOutputStream());
-                    output.println(Integer.toString((int) file.length()));
-                    output.flush();
-                    System.out.println("Done.");
+                            socket.close();
 
-                    BufferedReader input11 = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                    String message = input11.readLine();
-                    System.out.println(message);
-
-                    String filename = file.getName();
-                    output.println(filename);
-                    output.flush();
-                    System.out.println("Done.");
-
-                    socket.close();
+                        }
+                    }
 
                 }
-            }
+            } catch (UnknownHostException e) {
+                e.printStackTrace();
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
 
-        }
+            }finally{
+                    Platform.runLater(new Runnable() {
+                        @Override
+                        public void run() {
+                            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                            alert.setTitle("Success...");
+                            alert.setHeaderText("File is sent successfully");
+                            alert.setContentText("You can open application now !");
+                            alert.showAndWait().ifPresent(rs -> {
+                                if (rs == ButtonType.OK) {
+                                    showApplicationList();
+                                }
+                            });
+                        }
+                    });
+
+
+                }
+
+            }
+        });
+        thread.start();
+
+
 
 
     }
@@ -592,5 +729,351 @@ public class Controller implements Initializable {
         return ip;
     }
 
+    public void packageapp(){
+
+    }
+
+    public  void getapp(){
+        // Create the custom dialog.
+        Dialog<Pair<String, String>> dialog = new Dialog<>();
+        dialog.setTitle("Connect to remote device ");
+        dialog.setHeaderText("Enter ip and port ...");
+        dialog.setContentText("Select an option to continue");
+        // Set the button types.
+        ButtonType loginButtonType = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(loginButtonType, ButtonType.CANCEL);
+
+        GridPane gridPane = new GridPane();
+        gridPane.setHgap(10);
+        gridPane.setVgap(10);
+        gridPane.setPadding(new Insets(20, 150, 10, 10));
+
+        TextField from = new TextField();
+
+        from.textProperty().addListener(new ChangeListener<String>() {
+            @Override
+            public void changed(ObservableValue<? extends String> observable, String oldValue,
+                                String newValue) {
+                if (newValue.matches("[0-9.]*")) {
+                    if(newValue!=""){
+                        try{
+                            int value = Integer.parseInt(newValue);
+                        }catch(NumberFormatException e){
+
+                        }
+
+                    }
+
+                } else {
+                    from.setText(oldValue);
+                }
+            }
+        });
+        from.setPromptText("Ip");
+        TextField to = new TextField();
+        to.textProperty().addListener(new ChangeListener<String>() {
+            @Override
+            public void changed(ObservableValue<? extends String> observable, String oldValue,
+                                String newValue) {
+                if (newValue.matches("[0-9]*")) {
+                    if(newValue!=""){
+                        try{
+                            int value = Integer.parseInt(newValue);
+                        }catch(NumberFormatException e){
+
+                        }
+
+                    }
+
+                } else {
+                    to.setText(oldValue);
+                }
+            }
+        });
+        to.setPromptText("Port");
+        gridPane.add(new Label("Ip :"), 0, 0);
+        gridPane.add(from, 1, 0);
+        gridPane.add(new Label("Port:"), 2, 0);
+        gridPane.add(to, 3, 0);
+
+        dialog.getDialogPane().setContent(gridPane);
+
+        // Request focus on the username field by default.
+        Platform.runLater(() -> from.requestFocus());
+
+        // Convert the result to a username-password-pair when the login button is clicked.
+        dialog.setResultConverter(dialogButton -> {
+            if (dialogButton == loginButtonType) {
+                return new Pair<>(from.getText(), to.getText());
+            }
+            return null;
+        });
+
+        Optional<Pair<String, String>> result = dialog.showAndWait();
+
+        result.ifPresent(pair -> {
+
+            System.out.println("From=" + from.getText() + ", To=" + to.getText());
+
+        String ip = from.getText();
+        int port = Integer.parseInt(to.getText());
+
+        Thread thread = new Thread(new Runnable() {
+            Socket sock = null;
+            @Override
+            public void run() {
+                try {
+
+                    sock = new Socket(ip, port);
+                    System.out.println("Connecting...");
+                    BufferedReader input = new BufferedReader(new InputStreamReader(sock.getInputStream()));
+//                    while (input.readLine()!= null) {
+//                        messagefilelength = input.readLine();
+//                        System.out.println(messagefilelength);
+
+                    output = new PrintWriter(sock.getOutputStream());
+                    output.println("send me file");
+                    output.flush();
+//                    }
+                    messagefilelength = input.readLine();
+
+//                    System.out.println(messagefilelength);
+                    output = new PrintWriter(sock.getOutputStream());
+                    output.println("send me file");
+                    output.flush();
+                    filename = input.readLine();
+
+                } catch (UnknownHostException e) {
+                    e.printStackTrace();
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } finally {
+                    Platform.runLater(new Runnable() {
+                        @Override
+                        public void run() {
+                            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                            alert.setTitle("Success...");
+                            alert.setHeaderText("File is sent successfully");
+                            alert.setContentText(filename + messagefilelength);
+                            alert.showAndWait().ifPresent(rs -> {
+                                if (rs == ButtonType.OK) {
+//                                    showApplicationList();
+                                }
+                            });
+
+                            Thread thread = new Thread(new Runnable() {
+                                Socket sock = null;
+
+                                @Override
+                                public void run() {
+                                    try {
+
+                                        getfile(ip ,port);
+
+                                    } catch (UnknownHostException e) {
+                                        e.printStackTrace();
+                                    } catch (FileNotFoundException e) {
+                                        e.printStackTrace();
+                                    } catch (IOException e) {
+                                        e.printStackTrace();
+                                    } finally {
+                                        Platform.runLater(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                                                alert.setTitle("Success...");
+                                                alert.setHeaderText("File is sent successfully");
+                                                alert.setContentText("file is saved on app path");
+                                                alert.showAndWait().ifPresent(rs -> {
+                                                    if (rs == ButtonType.OK) {
+//                                    showApplicationList();
+                                                    }
+                                                });
+                                            }});
+                                        if (sock != null) {
+                                            try {
+                                                sock.close();
+                                            } catch (IOException e) {
+                                                e.printStackTrace();
+                                            }
+                                        }
+                                    }
+                                }
+                            });
+                            thread.start();
+                        }
+                    });
+
+                    if (sock != null) {
+                        try {
+                            sock.close();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            }
+        });
+
+        thread.start();
+        });
+    }
+
+
+
+
+
+
+
+
+
+    public void writeByte(byte[] bytes) {
+
+//        File file = Environment.getExternalStorageDirectory();
+        File save = new File(sentDir+"/"+filename);
+
+        try {
+            OutputStream out = new FileOutputStream(save.getAbsolutePath());
+            out.write(bytes);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }finally {
+            try {
+                unzip(save,new File(appsDir));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }finally {
+                Platform.runLater(new Runnable() {
+                                      @Override
+                                      public void run() {
+                                          showApplicationList();
+                                      }
+                                  });
+
+            }
+        }
+
+
+    }
+
+    public void getfile(String ip , int port) throws IOException {
+        Socket sock = new Socket(ip, port);
+        System.out.println("Connecting...");
+        PrintWriter output = new PrintWriter(sock.getOutputStream());
+        output.println("get file");
+        output.flush();
+
+        DataInputStream dIn = new DataInputStream(sock.getInputStream());   // read length of incoming message
+        int length = dIn.readInt();
+        if(length>0) {
+            byte[] message = new byte[length];
+            byte[] message1=new byte[length];
+            dIn.readFully(message1, 0, message1.length);
+            System.out.println(message1);
+//            messagees=message1;
+            writeByte(message1);
+
+
+        }
+
+
+    }
+
+    public void zipfile(File src ,File dest){
+        try {
+            FileOutputStream fileOut =new  FileOutputStream(dest);
+            ZipOutputStream zipOut = new  ZipOutputStream(new BufferedOutputStream(fileOut));
+            if(src.isDirectory()){
+                zipSubFolder(zipOut, src, src.getParent().length());
+                zipOut.close();
+            }else{
+                zipOut.close();
+            }
+        } catch (Exception e) {
+        e.printStackTrace();
+
+         }
+    }
+    public void zipSubFolder(ZipOutputStream zipOut,File dir, int basePathLength) throws IOException{
+        int BUFFER_SIZE = 2048;
+        File[] fileList = dir.listFiles();
+        BufferedInputStream bufferedInputStream= null;
+        for (File file : fileList) {
+            if (file.isDirectory()) {
+                if (file.listFiles().length!=0) {
+                    zipSubFolder(zipOut, file, basePathLength);
+
+                }else{
+                    String relativePath = file.getPath().substring(basePathLength).substring(1) + "/";
+                    ZipEntry entry = new ZipEntry(relativePath);
+                    entry.setTime(file.lastModified());
+                    zipOut.putNextEntry(entry);
+                }
+            }else{
+
+                byte[] data =new byte[BUFFER_SIZE];
+                String relativePath = file.getAbsolutePath().substring(basePathLength).substring(1);
+                FileInputStream fileInputStream =new  FileInputStream(file);
+                bufferedInputStream = new BufferedInputStream(fileInputStream, BUFFER_SIZE);
+                ZipEntry entry = new ZipEntry(relativePath);
+                entry.setTime(file.lastModified());
+                zipOut.putNextEntry(entry);
+                int  count = 0;
+                while(count!=-1){
+                    zipOut.write(data, 0, count);
+                    count = bufferedInputStream.read(data, 0, BUFFER_SIZE);
+
+                }
+                bufferedInputStream.close();
+
+
+            }
+        }
+    }
+
+    public void unzip(File zipFile, File targetDirectory) throws IOException{
+        int BUFFER_SIZE = 2048;
+        Boolean unzipSuccess = true;
+        ZipInputStream zipInputStream = new ZipInputStream(new BufferedInputStream(new FileInputStream(zipFile)));
+        try {
+            ZipEntry zipEntry=null;
+            byte[] buffer = new byte[BUFFER_SIZE] ;
+            while ((zipEntry=zipInputStream.getNextEntry())!=null) {
+               // zipEntry = zipInputStream.getNextEntry();
+                File file = new File(targetDirectory, zipEntry.getName());
+                File dir=null;
+                if (zipEntry.isDirectory()){
+                    dir=file;
+                }else{
+                    dir=file.getParentFile();
+                }
+                if (!dir.isDirectory() && !dir.mkdirs()) {
+                    throw new FileNotFoundException("Failed to ensure directory: " + dir.getAbsolutePath());
+                }
+                if (zipEntry.isDirectory()) {
+                    continue;
+                }
+                FileOutputStream fileOutputStream = new FileOutputStream(file);
+
+                int  count = 0;
+                while(count!=-1){
+                    fileOutputStream.write(buffer, 0, count);
+                    count = zipInputStream.read(buffer);
+                }
+                fileOutputStream.close();
+
+            }
+        }catch (Exception e) {
+            e.printStackTrace();
+            unzipSuccess = false;
+        } finally {
+            zipInputStream.close();
+        }
+
+    }
 
 }

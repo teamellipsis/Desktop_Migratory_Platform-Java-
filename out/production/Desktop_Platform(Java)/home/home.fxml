@@ -40,7 +40,7 @@
                         <Insets bottom="20.0" />
                     </VBox.margin>
                 </Label>
-                <Button fx:id="loadapp" alignment="BASELINE_LEFT" graphicTextGap="22.0" mnemonicParsing="false" onAction="#handleClicks" prefHeight="42.0" prefWidth="259.0" stylesheets="@style.css" text="Load_App" textFill="#e7e5e5">
+                <Button fx:id="loadapp" alignment="BASELINE_LEFT" graphicTextGap="22.0" mnemonicParsing="false" onAction="#handleClicks" prefHeight="42.0" prefWidth="259.0" stylesheets="@style.css" text="App List" textFill="#e7e5e5">
                     <graphic>
                         <ImageView fitHeight="23.0" fitWidth="27.0" pickOnBounds="true" preserveRatio="true">
                             <image>
@@ -58,18 +58,18 @@
                         <Insets left="50.0" />
                     </padding>
                 </Button>
-                <Button fx:id="openapp" alignment="BASELINE_LEFT" graphicTextGap="22.0" mnemonicParsing="false" onAction="#handleClicks" prefHeight="42.0" prefWidth="259.0" stylesheets="@style.css" text="Open_App">
-                    <graphic>
-                        <ImageView fitHeight="23.0" fitWidth="27.0" pickOnBounds="true" preserveRatio="true">
-                            <image>
-                                <Image url="@../images/icons8_Open_Envelope_32px.png" />
-                            </image>
-                        </ImageView>
-                    </graphic>
-                    <padding>
-                        <Insets left="50.0" />
-                    </padding>
-                </Button>
+<!--                <Button fx:id="openapp" alignment="BASELINE_LEFT" graphicTextGap="22.0" mnemonicParsing="false" onAction="#handleClicks" prefHeight="42.0" prefWidth="259.0" stylesheets="@style.css" text="Open_App">-->
+<!--                    <graphic>-->
+<!--                        <ImageView fitHeight="23.0" fitWidth="27.0" pickOnBounds="true" preserveRatio="true">-->
+<!--                            <image>-->
+<!--                                <Image url="@../images/icons8_Open_Envelope_32px.png" />-->
+<!--                            </image>-->
+<!--                        </ImageView>-->
+<!--                    </graphic>-->
+<!--                    <padding>-->
+<!--                        <Insets left="50.0" />-->
+<!--                    </padding>-->
+<!--                </Button>-->
                 <Button fx:id="closeapp" alignment="BASELINE_LEFT" graphicTextGap="22.0" mnemonicParsing="false" onAction="#handleClicks" prefHeight="42.0" prefWidth="259.0" stylesheets="@style.css" text="Close_App">
                     <graphic>
                         <ImageView fitHeight="23.0" fitWidth="27.0" pickOnBounds="true" preserveRatio="true">
@@ -82,7 +82,7 @@
                         <Insets left="50.0" />
                     </padding>
                 </Button>
-                <Button fx:id="btnMenus" alignment="BASELINE_LEFT" graphicTextGap="22.0" mnemonicParsing="false" onAction="#handleClicks" prefHeight="42.0" prefWidth="259.0" stylesheets="@style.css" text="Save_App">
+                <Button fx:id="btnSave" alignment="BASELINE_LEFT" graphicTextGap="22.0" mnemonicParsing="false" onAction="#handleClicks" prefHeight="42.0" prefWidth="259.0" stylesheets="@style.css" text="Save_App">
                     <graphic>
                         <ImageView fitHeight="23.0" fitWidth="27.0" pickOnBounds="true" preserveRatio="true">
                             <image>
@@ -94,7 +94,7 @@
                         <Insets left="50.0" />
                     </padding>
                 </Button>
-                <Button fx:id="btnPackages" alignment="BASELINE_LEFT" graphicTextGap="22.0" mnemonicParsing="false" prefHeight="42.0" prefWidth="259.0" stylesheets="@style.css" text="Send_App">
+                <Button fx:id="btnSend" alignment="BASELINE_LEFT" graphicTextGap="22.0" mnemonicParsing="false" prefHeight="42.0" onAction="#handleClicks"  prefWidth="259.0" stylesheets="@style.css" text="Send_App">
                     <graphic>
                         <ImageView fitHeight="23.0" fitWidth="27.0" pickOnBounds="true" preserveRatio="true">
                             <image>
@@ -106,7 +106,20 @@
                         <Insets left="50.0" />
                     </padding>
                 </Button>
-                <Button fx:id="btnSettings" alignment="BASELINE_LEFT" graphicTextGap="22.0" mnemonicParsing="false" prefHeight="42.0" prefWidth="259.0" stylesheets="@style.css" text="Settings">
+                <Button fx:id="btnGet" alignment="BASELINE_LEFT" graphicTextGap="22.0" mnemonicParsing="false" onAction="#handleClicks" prefHeight="42.0" prefWidth="259.0" stylesheets="@style.css" text="Get_App">
+                    <graphic>
+                        <ImageView fitHeight="23.0" fitWidth="27.0" pickOnBounds="true" preserveRatio="true">
+                            <image>
+                                <Image url="@../images/icons8_Open_Envelope_32px.png" />
+                            </image>
+                        </ImageView>
+                    </graphic>
+                    <padding>
+                        <Insets left="50.0" />
+                    </padding>
+                </Button>
+
+                <Button fx:id="btnChangeDir" alignment="BASELINE_LEFT" graphicTextGap="22.0" mnemonicParsing="false" onAction="#handleClicks" prefHeight="42.0" prefWidth="259.0" stylesheets="@style.css" text="Change App Dir">
                     <graphic>
                         <ImageView fitHeight="23.0" fitWidth="27.0" pickOnBounds="true" preserveRatio="true">
                             <image>
@@ -154,6 +167,7 @@
                                 <Font size="24.0" />
                             </font>
                         </Label>
+
                         <!--                  <HBox alignment="CENTER_LEFT" layoutX="45.0" layoutY="72.0" prefHeight="92.0" prefWidth="661.0" spacing="50.0">-->
                         <!--                     <children>-->
                         <!--                        <VBox alignment="CENTER" prefHeight="200.0" prefWidth="100.0">-->
@@ -248,88 +262,129 @@
                 <Pane fx:id="pnlMenus" prefHeight="554.0" prefWidth="793.0">
                     <children>
                         <!--                  <TextField layoutX="590.0" layoutY="47.0" prefHeight="27.0" prefWidth="183.0" promptText="search" style="-fx-background-color: #02030A; -fx-border-color: #B7C3D7; -fx-border-radius: 2em;" />-->
-                        <Label layoutX="57.0" layoutY="25.0" text="Application" textFill="#e7e5e5">
+                        <Label layoutX="57.0" layoutY="25.0" text="Waitting for clients..." textFill="#e7e5e5">
                             <font>
                                 <Font size="24.0" />
                             </font>
                         </Label>
                         <HBox alignment="CENTER_LEFT" layoutX="45.0" layoutY="72.0" prefHeight="92.0" prefWidth="661.0" spacing="50.0">
                             <children>
-                                <VBox alignment="CENTER" prefHeight="200.0" prefWidth="100.0">
+                                <VBox alignment="CENTER_LEFT" prefHeight="500.0" prefWidth="100.0">
                                     <children>
-                                        <Label text="22000" textFill="#2a73ff">
+                                        <Label text="Server Port" textFill="#464F67">
                                             <font>
-                                                <Font name="System Bold" size="26.0" />
+                                                <Font name="System Bold" size="30.0" />
                                             </font>
                                         </Label>
-                                        <Label text="Total Orders" textFill="#e7e5e5" />
-                                    </children>
-                                </VBox>
-                                <VBox alignment="CENTER" prefHeight="200.0" prefWidth="100.0">
-                                    <children>
-                                        <Label text="1500" textFill="#26bfbc">
+
+                                        <Label text="Server IP" textFill="#26bfbc">
                                             <font>
-                                                <Font name="System Bold" size="26.0" />
+                                                <Font name="System Bold" size="15.0" />
                                             </font>
                                         </Label>
-                                        <Label text="Total delivered" textFill="#e7e5e5" />
-                                    </children>
-                                </VBox>
-                                <VBox alignment="CENTER" prefHeight="200.0" prefWidth="100.0">
-                                    <children>
-                                        <Label text="1000" textFill="#fa5f7e">
+                                        <Label text="Server Port" textFill="#464F67">
                                             <font>
-                                                <Font name="System Bold" size="26.0" />
+                                                <Font name="System Bold" size="15.0" />
                                             </font>
                                         </Label>
-                                        <Label text="Peding Orders" textFill="#e7e5e5" />
-                                    </children>
-                                </VBox>
-                                <VBox alignment="CENTER" prefHeight="200.0" prefWidth="100.0">
-                                    <children>
-                                        <Label text="780" textFill="#de0000">
+                                        <Label text="Server Port" textFill="#26bfbc">
                                             <font>
-                                                <Font name="System Bold" size="26.0" />
+                                                <Font name="System Bold" size="15.0" />
                                             </font>
                                         </Label>
-                                        <Label text="Orders on Hold" textFill="#e7e5e5" />
+                                        <Label text="Server Port" textFill="#464F67">
+                                            <font>
+                                                <Font name="System Bold" size="15.0" />
+                                            </font>
+                                        </Label>
+                                        <Label text="Application" textFill="#26bfbc">
+                                            <font>
+                                                <Font name="System Bold" size="15.0" />
+                                            </font>
+                                        </Label>
+                                        <Label text="Server Port" textFill="#464F67">
+                                            <font>
+                                                <Font name="System Bold" size="45.0" />
+                                            </font>
+                                        </Label>
+                                        <Label text="Status" textFill="#F75D59">
+                                            <font>
+                                                <Font name="System Bold" size="15.0" />
+                                            </font>
+                                        </Label>
+<!--                                        <Label text="Server IP" textFill="#e7e5e5" />-->
+<!--                                        <Label text="Server IP" textFill="#e7e5e5" />-->
                                     </children>
                                 </VBox>
-                            </children>
-                        </HBox>
-                        <HBox alignment="CENTER_LEFT" layoutX="45.0" layoutY="178.0" prefHeight="42.0" prefWidth="712.0" spacing="80.0" style="-fx-background-color: #02030A;">
-                            <children>
-                                <Label text="Company Name" textFill="#e7e5e5">
-                                    <HBox.margin>
-                                        <Insets left="50.0" />
-                                    </HBox.margin>
-                                </Label>
-                                <Label text="Airport" textFill="#e7e5e5">
-                                    <HBox.margin>
-                                        <Insets />
-                                    </HBox.margin>
-                                </Label>
-                                <Label text="Delivery Date" textFill="#e7e5e5">
-                                    <HBox.margin>
-                                        <Insets />
-                                    </HBox.margin>
-                                </Label>
-                                <Label text="Amount" textFill="#e7e5e5">
-                                    <HBox.margin>
-                                        <Insets />
-                                    </HBox.margin>
-                                </Label>
-                                <Label text="Status" textFill="#e7e5e5">
-                                    <HBox.margin>
-                                        <Insets />
-                                    </HBox.margin>
-                                </Label>
+                                <VBox alignment="CENTER_LEFT" prefHeight="200.0" prefWidth="500.0">
+                                    <children>
+                                        <Label text="Server Port" textFill="#464F67">
+                                            <font>
+                                                <Font name="System Bold" size="30.0" />
+                                            </font>
+                                        </Label>
+                                        <Label fx:id="lblIP" text="Server IP" textFill="#26bfbc">
+                                            <font>
+                                                <Font name="System Bold" size="15.0" />
+                                            </font>
+                                        </Label>
+                                        <Label text="Server Port" textFill="#464F67">
+                                            <font>
+                                                <Font name="System Bold" size="15.0" />
+                                            </font>
+                                        </Label>
+                                        <Label fx:id="lblPort" text="Server Port" textFill="#26bfbc">
+                                            <font>
+                                                <Font name="System Bold" size="15.0" />
+                                            </font>
+                                        </Label>
+                                        <Label text="Server Port" textFill="#464F67">
+                                            <font>
+                                                <Font name="System Bold" size="15.0" />
+                                            </font>
+                                        </Label>
+                                        <Label fx:id="lblApplication" text="Application" textFill="#26bfbc">
+                                            <font>
+                                                <Font name="System Bold" size="15.0" />
+                                            </font>
+                                        </Label>
+                                        <Label text="Server Port" textFill="#464F67">
+                                            <font>
+                                                <Font name="System Bold" size="45.0" />
+                                            </font>
+                                        </Label>
+                                        <Label fx:id="lblStatus"  text="Waiting ....." textFill="#F75D59">
+                                            <font>
+                                                <Font name="System Bold" size="15.0" />
+                                            </font>
+                                        </Label>
+                                    </children>
+                                </VBox>
                             </children>
                         </HBox>
 
                     </children>
                 </Pane>
-                <Pane fx:id="pnlOrders" prefHeight="200.0" prefWidth="200.0"  />
+                <Pane fx:id="pnlOrders" prefHeight="200.0" prefWidth="200.0"  >
+
+                    <children>
+                        <!--                  <TextField layoutX="590.0" layoutY="47.0" prefHeight="27.0" prefWidth="183.0" promptText="search" style="-fx-background-color: #02030A; -fx-border-color: #B7C3D7; -fx-border-radius: 2em;" />-->
+                        <Label layoutX="57.0" layoutY="25.0" text="Application List" textFill="#e7e5e5">
+                            <font>
+                                <Font size="24.0" />
+                            </font>
+                        </Label>
+                        <ScrollPane layoutX="14.0" layoutY="71.0" prefHeight="499.0" prefWidth="746.0" stylesheets="@style.css">
+                            <content>
+                                <VBox fx:id="fillist" prefHeight="497.0" prefWidth="744.0" spacing="5.0" style="-fx-background-color: white;">
+                                    <padding>
+                                        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                                    </padding>
+                                </VBox>
+                            </content>
+                        </ScrollPane>
+                    </children>
+                </Pane>
             </children>
         </StackPane>
     </children>

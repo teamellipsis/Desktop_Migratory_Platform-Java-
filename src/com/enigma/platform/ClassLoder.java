@@ -7,8 +7,8 @@ import java.net.URLClassLoader;
 
 public class ClassLoder {
 
-    public static URLClassLoader getclassloader() throws MalformedURLException {
-        String file_name = "resources/todolast.jar";
+    public static URLClassLoader getclassloader(String filepath) throws MalformedURLException {
+        String file_name = filepath+"/todolast.jar";
         File file = new File(file_name);
         if (!file.exists()){
             System.out.println("null");
